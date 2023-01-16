@@ -1,4 +1,8 @@
-package com.mockitotutorial.happyhotel.booking;
+package com.mockitotutorial.happyhotel.booking.service;
+
+import com.mockitotutorial.happyhotel.booking.BookingRequest;
+import com.mockitotutorial.happyhotel.booking.BusinessException;
+import com.mockitotutorial.happyhotel.booking.Room;
 
 import java.util.*;
 import java.util.stream.Collectors;

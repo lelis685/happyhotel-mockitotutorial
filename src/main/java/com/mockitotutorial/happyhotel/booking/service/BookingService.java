@@ -1,4 +1,6 @@
-package com.mockitotutorial.happyhotel.booking;
+package com.mockitotutorial.happyhotel.booking.service;
+
+import com.mockitotutorial.happyhotel.booking.*;
 
 import java.time.temporal.ChronoUnit;
 
