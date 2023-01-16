@@ -1,19 +1,16 @@
 package com.mockitotutorial.happyhotel.booking.service;
 
-import com.mockitotutorial.happyhotel.booking.BookingDAO;
-import com.mockitotutorial.happyhotel.booking.BookingRequest;
-import com.mockitotutorial.happyhotel.booking.MailSender;
-import com.mockitotutorial.happyhotel.booking.Room;
+import com.mockitotutorial.happyhotel.booking.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -104,6 +101,23 @@ class BookingServiceTest {
                 () -> assertEquals(expectedFirstCall, actualFirst),
                 () -> assertEquals(expectedSecondCall, actualSecond)
         );
+    }
+
+
+    @Test
+    void should_ThrowException_When_NoRoomAvailable() {
+        // given
+        BookingRequest bookingRequest = new BookingRequest("1",
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 5), 2, false);
+        when(this.roomService.findAvailableRoomId(bookingRequest))
+                .thenThrow(BusinessException.class);
+
+        //when
+        Executable executable = () -> this.bookingService.makeBooking(bookingRequest);
+
+        // then
+        assertThrows(BusinessException.class, executable);
     }
 
 
