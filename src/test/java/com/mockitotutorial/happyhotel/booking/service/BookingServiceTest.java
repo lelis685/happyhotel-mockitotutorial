@@ -11,9 +11,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 class BookingServiceTest {
 
@@ -122,7 +121,6 @@ class BookingServiceTest {
     }
 
 
-
     @Test
     void should_NotCompleteBooking_WhenPriceTooHigh() {
         // given
@@ -156,5 +154,36 @@ class BookingServiceTest {
         // then
         assertThrows(BusinessException.class, executable);
     }
+
+    @Test
+    void should_InvokePayment_When_Prepaid() {
+        // given
+        BookingRequest bookingRequest = new BookingRequest("2",
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 5), 2, true);
+
+        //when
+        bookingService.makeBooking(bookingRequest);
+
+        // then
+        verify(paymentService, times(1)).pay(bookingRequest, 400.0);
+        verifyNoMoreInteractions(paymentService);
+    }
+
+    @Test
+    void should_NotInvokePayment_When_NotPrepaid() {
+        // given
+        BookingRequest bookingRequest = new BookingRequest("2",
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 5), 2, false);
+
+        //when
+        bookingService.makeBooking(bookingRequest);
+
+        // then
+        verify(paymentService, never()).pay(any(), anyDouble());
+    }
+
+
 
 }
