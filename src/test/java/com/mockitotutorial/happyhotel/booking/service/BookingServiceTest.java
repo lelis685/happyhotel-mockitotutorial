@@ -13,6 +13,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
 
 class BookingServiceTest {
 
@@ -121,5 +122,39 @@ class BookingServiceTest {
     }
 
 
+
+    @Test
+    void should_NotCompleteBooking_WhenPriceTooHigh() {
+        // given
+        BookingRequest bookingRequest = new BookingRequest("2",
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 5), 2, true);
+
+        when(this.paymentService.pay(any(),anyDouble()))
+                .thenThrow(BusinessException.class);
+
+        //when
+        Executable executable = () -> this.bookingService.makeBooking(bookingRequest);
+
+        // then
+        assertThrows(BusinessException.class, executable);
+    }
+
+    @Test
+    void should_NotCompleteBooking_WhenPrice400() {
+        // given
+        BookingRequest bookingRequest = new BookingRequest("2",
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 5), 2, true);
+
+        when(this.paymentService.pay(any(),eq(400.0)))
+                .thenThrow(BusinessException.class);
+
+        //when
+        Executable executable = () -> this.bookingService.makeBooking(bookingRequest);
+
+        // then
+        assertThrows(BusinessException.class, executable);
+    }
 
 }
