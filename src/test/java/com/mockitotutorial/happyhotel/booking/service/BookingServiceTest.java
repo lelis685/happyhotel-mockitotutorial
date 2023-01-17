@@ -336,13 +336,29 @@ class BookingServiceTest {
             // then
             assertEquals(expected, actual);
         }
-
-
-
     }
 
 
 
+    @Test
+    void should_Return80PercentPrice() {
+
+        try(MockedStatic<CurrencyConverter> mockedConverter = mockStatic(CurrencyConverter.class)) {
+            // given
+            BookingRequest bookingRequest = new BookingRequest("2",
+                    LocalDate.of(2023, 1, 1),
+                    LocalDate.of(2023, 1, 5), 2, true);
+            double expected = 400.0 * 0.8;
+            mockedConverter.when(() -> CurrencyConverter.toEuro(anyDouble()))
+                    .thenAnswer(inv -> (double) inv.getArgument(0) * 0.8);
+
+            //when
+            double actual = bookingService.calculatePriceEuro(bookingRequest);
+
+            // then
+            assertEquals(expected, actual);
+        }
+    }
 
 
 
