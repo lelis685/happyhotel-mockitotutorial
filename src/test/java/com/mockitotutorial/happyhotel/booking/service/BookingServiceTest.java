@@ -4,6 +4,7 @@ import com.mockitotutorial.happyhotel.booking.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.mockito.ArgumentCaptor;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -21,6 +22,7 @@ class BookingServiceTest {
     private RoomService roomService;
     private BookingDAO bookingDAO;
     private MailSender mailSender;
+    private ArgumentCaptor<Double> doubleCaptor;
 
     @BeforeEach
     void setup() {
@@ -30,6 +32,8 @@ class BookingServiceTest {
         this.mailSender = mock(MailSender.class);
 
         this.bookingService = new BookingService(paymentService, roomService, bookingDAO, mailSender);
+
+        this.doubleCaptor = ArgumentCaptor.forClass(Double.class);
     }
 
 
@@ -62,7 +66,7 @@ class BookingServiceTest {
     @Test
     void should_CountAvailablePlaces_When_OneRoomAvailable() {
         when(this.roomService.getAvailableRooms())
-                .thenReturn(Collections.singletonList(new Room("Room 1",2)));
+                .thenReturn(Collections.singletonList(new Room("Room 1", 2)));
         int expected = 2;
 
         int actual = bookingService.getAvailablePlaceCount();
@@ -73,7 +77,7 @@ class BookingServiceTest {
 
     @Test
     void should_CountAvailablePlaces_When_MultipleRoomsAvailable() {
-        List<Room> rooms = Arrays.asList(new Room("Room 1",2), new Room("Room 2",3));
+        List<Room> rooms = Arrays.asList(new Room("Room 1", 2), new Room("Room 2", 3));
         when(this.roomService.getAvailableRooms())
                 .thenReturn(rooms);
 
@@ -88,7 +92,7 @@ class BookingServiceTest {
     @Test
     void should_CountAvailablePlaces_When_CalledMultipleTimes() {
         when(this.roomService.getAvailableRooms())
-                .thenReturn(Collections.nCopies(10, new Room("Room 1",2)))
+                .thenReturn(Collections.nCopies(10, new Room("Room 1", 2)))
                 .thenReturn(Collections.emptyList());
 
         int expectedFirstCall = 20;
@@ -128,7 +132,7 @@ class BookingServiceTest {
                 LocalDate.of(2023, 1, 1),
                 LocalDate.of(2023, 1, 5), 2, true);
 
-        when(this.paymentService.pay(any(),anyDouble()))
+        when(this.paymentService.pay(any(), anyDouble()))
                 .thenThrow(BusinessException.class);
 
         //when
@@ -145,7 +149,7 @@ class BookingServiceTest {
                 LocalDate.of(2023, 1, 1),
                 LocalDate.of(2023, 1, 5), 2, true);
 
-        when(this.paymentService.pay(any(),eq(400.0)))
+        when(this.paymentService.pay(any(), eq(400.0)))
                 .thenThrow(BusinessException.class);
 
         //when
@@ -247,5 +251,44 @@ class BookingServiceTest {
     }
 
 
+    @Test
+    void should_PayCorrect_When_InputOk() {
+        // given
+        BookingRequest bookingRequest = new BookingRequest("2",
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 5), 2, true);
+
+        //when
+        this.bookingService.makeBooking(bookingRequest);
+
+        //then
+        verify(paymentService, times(1)).pay(eq(bookingRequest), doubleCaptor.capture());
+        double capturedArgument = doubleCaptor.getValue();
+
+        assertEquals(400.0, capturedArgument);
+    }
+
+
+    @Test
+    void should_PayCorrect_When_MultipleCalls() {
+        // given
+        BookingRequest bookingRequest = new BookingRequest("2",
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 5), 2, true);
+        BookingRequest bookingRequest2 = new BookingRequest("2",
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 2), 2, true);
+        List<Double> expectedValues = Arrays.asList(400.0, 100.0);
+
+        //when
+        this.bookingService.makeBooking(bookingRequest);
+        this.bookingService.makeBooking(bookingRequest2);
+
+        //then
+        verify(paymentService, times(2)).pay(any(), doubleCaptor.capture());
+        List<Double> capturedArgument = doubleCaptor.getAllValues();
+
+        assertEquals(expectedValues, capturedArgument);
+    }
 
 }
