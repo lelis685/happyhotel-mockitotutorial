@@ -215,4 +215,37 @@ class BookingServiceTest {
         bookingService.cancelBooking(bookingId);
     }
 
+
+    @Test
+    void should_ThrowException_WhenMailNotReady() {
+        // given
+        BookingRequest bookingRequest = new BookingRequest("2",
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 5), 2, true);
+
+        doThrow(new BusinessException()).when(mailSender).sendBookingConfirmation(any());
+
+        //when
+        Executable executable = () -> this.bookingService.makeBooking(bookingRequest);
+
+        // then
+        assertThrows(BusinessException.class, executable);
+    }
+
+
+    @Test
+    void should_NotThrowException_WhenMailReady() {
+        // given
+        BookingRequest bookingRequest = new BookingRequest("2",
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 5), 2, true);
+
+        doNothing().when(mailSender).sendBookingConfirmation(any());
+
+        //when
+        this.bookingService.makeBooking(bookingRequest);
+    }
+
+
+
 }
