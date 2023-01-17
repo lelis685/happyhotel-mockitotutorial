@@ -1,7 +1,6 @@
 package com.mockitotutorial.happyhotel.booking.service;
 
 import com.mockitotutorial.happyhotel.booking.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.*;
@@ -15,6 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.*;
 
 @MockitoSettings
 class BookingServiceTest {
@@ -36,6 +36,7 @@ class BookingServiceTest {
 
     @Captor
     private ArgumentCaptor<Double> doubleCaptor;
+
 
     @Test
     void should_CalculateCorrectPrice_When_CorrectInput() {
@@ -290,5 +291,59 @@ class BookingServiceTest {
 
         assertEquals(expectedValues, capturedArgument);
     }
+
+    @Test
+    void should_BDD_CountAvailablePlaces_When_OneRoomAvailable() {
+        given(this.roomService.getAvailableRooms())
+                .willReturn(Collections.singletonList(new Room("Room 1", 2)));
+        int expected = 2;
+
+        int actual = bookingService.getAvailablePlaceCount();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void should_BDD_InvokePayment_When_Prepaid() {
+        // given
+        BookingRequest bookingRequest = new BookingRequest("2",
+                LocalDate.of(2023, 1, 1),
+                LocalDate.of(2023, 1, 5), 2, true);
+
+        //when
+        bookingService.makeBooking(bookingRequest);
+
+        // then
+        then(paymentService).should(times(1)).pay(bookingRequest, 400.0);
+        verifyNoMoreInteractions(paymentService);
+    }
+
+
+    @Test
+    void should_CalculateCorrectPrice() {
+
+        try(MockedStatic<CurrencyConverter> mockedConverter = mockStatic(CurrencyConverter.class)) {
+            // given
+            BookingRequest bookingRequest = new BookingRequest("2",
+                    LocalDate.of(2023, 1, 1),
+                    LocalDate.of(2023, 1, 5), 2, true);
+            double expected = 400.0;
+            mockedConverter.when(() -> CurrencyConverter.toEuro(anyDouble())).thenReturn(400.0);
+
+            //when
+            double actual = bookingService.calculatePriceEuro(bookingRequest);
+
+            // then
+            assertEquals(expected, actual);
+        }
+
+
+
+    }
+
+
+
+
+
 
 }
