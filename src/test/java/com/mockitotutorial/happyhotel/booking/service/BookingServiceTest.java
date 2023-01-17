@@ -4,7 +4,8 @@ import com.mockitotutorial.happyhotel.booking.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
-import org.mockito.ArgumentCaptor;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoSettings;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -15,27 +16,26 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@MockitoSettings
 class BookingServiceTest {
 
+    @InjectMocks
     private BookingService bookingService;
+
+    @Mock
     private PaymentService paymentService;
+
+    @Mock
     private RoomService roomService;
+
+    @Spy
     private BookingDAO bookingDAO;
+
+    @Mock
     private MailSender mailSender;
+
+    @Captor
     private ArgumentCaptor<Double> doubleCaptor;
-
-    @BeforeEach
-    void setup() {
-        this.paymentService = mock(PaymentService.class);
-        this.roomService = mock(RoomService.class);
-        this.bookingDAO = spy(BookingDAO.class);
-        this.mailSender = mock(MailSender.class);
-
-        this.bookingService = new BookingService(paymentService, roomService, bookingDAO, mailSender);
-
-        this.doubleCaptor = ArgumentCaptor.forClass(Double.class);
-    }
-
 
     @Test
     void should_CalculateCorrectPrice_When_CorrectInput() {
